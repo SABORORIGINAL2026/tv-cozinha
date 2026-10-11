@@ -176,10 +176,19 @@ var SUPABASE_ANON_KEY = 'sb_publishable_resb0eT3FvA0q2xxpwR6uw_yaod0nUS';
     g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
     o.connect(g); g.connect(audioCtx.destination); o.start(start); o.stop(start + dur + 0.02);
   }
+    var SOM_ARQUIVO = 'alerta.mp3';  /* nome do seu arquivo de áudio */
+  var VEZES = 2;                   /* quantas vezes toca a cada pedido novo */
+  var somAlerta = new Audio(SOM_ARQUIVO);
+  somAlerta.preload = 'auto';
   function alarm(times) {
-    if (!audioCtx || !soundOn) return;
-    var t0 = audioCtx.currentTime;
-    for (var i = 0; i < times; i++) { tone(880, t0 + i * 0.6, 0.2, 0.28); tone(1175, t0 + i * 0.6 + 0.22, 0.25, 0.28); }
+    if (!soundOn) return;
+    var restantes = times > 1 ? VEZES : 1;
+    function tocar() {
+      try { somAlerta.currentTime = 0; var p = somAlerta.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+      restantes--;
+    }
+    somAlerta.onended = function () { if (restantes > 0) tocar(); };
+    tocar();
   }
   function requestWake() {
     try { if (navigator.wakeLock && document.visibilityState === 'visible') navigator.wakeLock.request('screen').then(function (l) { wakeLock = l; }, function () {}); } catch (e) {}
