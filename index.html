@@ -140,7 +140,7 @@ var SUPABASE_ANON_KEY = 'sb_publishable_resb0eT3FvA0q2xxpwR6uw_yaod0nUS';
       else if (k.indexOf('on') === 0) e.addEventListener(k.slice(2), v);
       else if (v !== false && v != null) e.setAttribute(k, v === true ? '' : v);
     });
-       (function add(list) {
+    (function add(list) {
       for (var i = 0; i < list.length; i++) {
         var c = list[i];
         if (c == null || c === false) continue;
@@ -168,15 +168,7 @@ var SUPABASE_ANON_KEY = 'sb_publishable_resb0eT3FvA0q2xxpwR6uw_yaod0nUS';
   function ensureAudio() {
     try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); } catch (e) {}
   }
-  function tone(freq, start, dur, vol) {
-    var o = audioCtx.createOscillator(), g = audioCtx.createGain();
-    o.type = 'square'; o.frequency.value = freq;
-    g.gain.setValueAtTime(0.0001, start);
-    g.gain.exponentialRampToValueAtTime(vol, start + 0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
-    o.connect(g); g.connect(audioCtx.destination); o.start(start); o.stop(start + dur + 0.02);
-  }
-    var SOM_ARQUIVO = 'alerta.mp3';  /* nome do seu arquivo de áudio */
+  var SOM_ARQUIVO = 'alerta.mp3';  /* nome do seu arquivo de áudio */
   var VEZES = 2;                   /* quantas vezes toca a cada pedido novo */
   var somAlerta = new Audio(SOM_ARQUIVO);
   somAlerta.preload = 'auto';
@@ -195,16 +187,19 @@ var SUPABASE_ANON_KEY = 'sb_publishable_resb0eT3FvA0q2xxpwR6uw_yaod0nUS';
   }
   document.addEventListener('visibilitychange', function () { if (soundOn) requestWake(); });
   $('#sound').addEventListener('click', function () {
-    ensureAudio(); soundOn = true; alarm(1); requestWake();
+    ensureAudio(); soundOn = true; requestWake();
+    /* desbloqueia o áudio em silêncio (o navegador exige um toque), sem tocar nada */
+    try {
+      somAlerta.muted = true;
+      var p = somAlerta.play();
+      if (p && p.then) p.then(function () {
+        somAlerta.pause(); somAlerta.currentTime = 0; somAlerta.muted = false;
+      }).catch(function () { somAlerta.muted = false; });
+    } catch (e) {}
     try { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(function () {}); } catch (e) {}
     var b = $('#sound'); b.hidden = true;
     var s = h('span', { class: 'sound-on', text: 'Som ligado' }); b.parentNode.insertBefore(s, b);
   });
-  setInterval(function () {
-    if (!soundOn) return;
-    var waiting = Array.from(orders.values()).some(function (o) { return o.status === 'novo' && Date.now() - o.t > 45000; });
-    if (waiting) alarm(1);
-  }, 60000);
 
   /* ---------- login ---------- */
   function showLogin() { $('#login').hidden = false; $('#app').hidden = true; $('#logout').hidden = true; $('#sound').hidden = true; $('#title').hidden = true; $('#conn').hidden = true; }
